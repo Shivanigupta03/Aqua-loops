@@ -1,4 +1,4 @@
-export type ProductCategory = "Storage" | "Dining" | "Décor" | "Gifts"
+export type ProductCategory = "Storage" | "Dining" | "Décor" | "Bags"
 
 export interface Product {
   id: string
@@ -10,7 +10,13 @@ export interface Product {
   material: string
   handmadeBy: string
   sustainabilityNote: string
-  images: string[]
+  images: ProductImage[]
+}
+
+export interface ProductImage {
+  src: string
+  /** CSS object-position, for photos where the product isn't centered in frame. */
+  focus?: string
 }
 
 export interface CartItem {

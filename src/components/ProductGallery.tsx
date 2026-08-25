@@ -1,6 +1,7 @@
 import { useRef, useState } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
+import type { ProductImage } from "@/types"
 
 /**
  * Swipeable image gallery. Safe to nest inside a react-router <Link>
@@ -15,7 +16,7 @@ export function ProductGallery({
   compact = false,
   className,
 }: {
-  images: string[]
+  images: ProductImage[]
   alt: string
   aspect?: string
   compact?: boolean
@@ -57,7 +58,12 @@ export function ProductGallery({
   if (images.length === 1) {
     return (
       <div className={cn(aspect, "overflow-hidden rounded-3xl bg-aqua-pale shadow-card", className)}>
-        <img src={images[0]} alt={alt} className="h-full w-full object-cover" />
+        <img
+          src={images[0].src}
+          alt={alt}
+          className="h-full w-full object-cover"
+          style={{ objectPosition: images[0].focus ?? "50% 50%" }}
+        />
       </div>
     )
   }
@@ -76,13 +82,14 @@ export function ProductGallery({
           className="flex h-full transition-transform duration-400 ease-out"
           style={{ transform: `translateX(-${index * 100}%)` }}
         >
-          {images.map((src, i) => (
+          {images.map(({ src, focus }, i) => (
             <img
               key={src}
               src={src}
               alt={`${alt} — photo ${i + 1} of ${images.length}`}
               draggable={false}
               className="h-full w-full shrink-0 object-cover"
+              style={{ objectPosition: focus ?? "50% 50%" }}
             />
           ))}
         </div>

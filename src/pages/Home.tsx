@@ -11,16 +11,19 @@ const impactCards = [
     icon: Users,
     title: "Supports Women Artisans",
     text: "Every purchase creates fair, dignified income for rural women artisan communities.",
+    image: "/images/impact/women-artisans.jpg",
   },
   {
     icon: Droplets,
     title: "Reduces Water Hyacinth Waste",
     text: "We repurpose an invasive aquatic plant, easing pressure on lakes, ponds, and rivers.",
+    image: "/images/impact/water-waste.jpg",
   },
   {
     icon: Sparkles,
     title: "Promotes Conscious Consumption",
     text: "Handmade, biodegradable pieces designed to replace mass-produced, plastic alternatives.",
+    image: "/images/impact/conscious-consumption.jpg",
   },
 ]
 
@@ -99,9 +102,20 @@ export default function Home() {
       <section className="bg-sand/30 py-24 md:py-28">
         <div className="container-app">
           <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-            {impactCards.map(({ icon: Icon, title, text }) => (
-              <Card key={title} className="p-2 text-center transition-all duration-500 hover:-translate-y-1.5 hover:shadow-soft">
-                <CardContent className="flex flex-col items-center gap-4 pt-8">
+            {impactCards.map(({ icon: Icon, title, text, image }) => (
+              <Card
+                key={title}
+                className="overflow-hidden text-center transition-all duration-500 hover:-translate-y-1.5 hover:shadow-soft"
+              >
+                <div className="aspect-[4/3] overflow-hidden">
+                  <img
+                    src={image}
+                    alt={title}
+                    loading="lazy"
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <CardContent className="flex flex-col items-center gap-4 pt-6">
                   <div className="flex h-14 w-14 items-center justify-center rounded-full bg-sea/10 text-sea">
                     <Icon className="size-6" strokeWidth={1.5} />
                   </div>

@@ -8,24 +8,28 @@ const processSteps = [
     step: "01",
     title: "Water hyacinth is collected",
     text: "Harvested from local lakes and ponds where it grows invasively.",
+    image: "/images/process/collected.jpg",
   },
   {
     icon: Sprout,
     step: "02",
     title: "It is dried and prepared",
     text: "Stems are sun-dried and treated to become durable, weavable fibre.",
+    image: "/images/process/dried.jpg",
   },
   {
     icon: Hammer,
     step: "03",
     title: "Artisans handcraft products",
     text: "Rural women artisans hand-weave each piece using traditional techniques.",
+    image: "/images/process/handcrafted.jpg",
   },
   {
     icon: ShoppingBag,
     step: "04",
     title: "Products are sold directly to consumers",
     text: "Finished pieces reach conscious consumers, with fair value returned to artisans.",
+    image: "/images/process/sold.jpg",
   },
 ]
 
@@ -107,9 +111,20 @@ export default function AboutImpact() {
           <h2 className="mt-3 font-serif text-3xl text-deep-teal md:text-4xl">Our Process</h2>
         </div>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {processSteps.map(({ icon: Icon, step, title, text }) => (
-            <Card key={step} className="transition-all duration-500 hover:-translate-y-1.5 hover:shadow-soft">
-              <CardContent className="flex flex-col gap-4 pt-8">
+          {processSteps.map(({ icon: Icon, step, title, text, image }) => (
+            <Card
+              key={step}
+              className="overflow-hidden transition-all duration-500 hover:-translate-y-1.5 hover:shadow-soft"
+            >
+              <div className="aspect-[4/3] overflow-hidden">
+                <img
+                  src={image}
+                  alt={title}
+                  loading="lazy"
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              <CardContent className="flex flex-col gap-4 pt-6">
                 <div className="flex items-center justify-between">
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-sea/10 text-sea">
                     <Icon className="size-5" strokeWidth={1.5} />
