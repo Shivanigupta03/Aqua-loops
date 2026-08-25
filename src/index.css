@@ -1,0 +1,63 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;1,400&family=Nunito:wght@300;400;500;600;700;800&display=swap');
+@import "tailwindcss";
+@plugin "tailwindcss-animate";
+
+@theme {
+  --font-serif: "Fraunces", "Georgia", serif;
+  --font-sans: "Nunito", -apple-system, BlinkMacSystemFont, sans-serif;
+
+  --color-deep-teal: #6b4b57;
+  --color-teal: #7d5c67;
+  --color-sea: #b3707c;
+  --color-sea-light: #d29aa4;
+  --color-aqua: #cfe0d1;
+  --color-aqua-pale: #f5eee8;
+  --color-sand: #f0e2d3;
+  --color-sand-dark: #e0c9b3;
+  --color-off-white: #fdf8f4;
+  --color-ink: #4a3b3f;
+
+  --shadow-soft: 0 10px 36px -14px rgba(107, 75, 87, 0.24);
+  --shadow-card: 0 4px 20px -6px rgba(107, 75, 87, 0.16);
+
+  --animate-ripple: ripple 8s ease-in-out infinite;
+  --animate-float: float 7s ease-in-out infinite;
+  --animate-float-slow: float 11s ease-in-out infinite;
+  --animate-drift: drift 22s linear infinite;
+
+  @keyframes ripple {
+    0%, 100% { transform: scale(1); opacity: 0.35; }
+    50% { transform: scale(1.08); opacity: 0.55; }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-16px) rotate(4deg); }
+  }
+  @keyframes drift {
+    0% { transform: translateX(-6%) translateY(0); }
+    50% { transform: translateX(4%) translateY(-10px); }
+    100% { transform: translateX(-6%) translateY(0); }
+  }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-off-white text-ink font-sans antialiased;
+  }
+  h1, h2, h3, h4 {
+    @apply font-serif;
+    letter-spacing: -0.01em;
+  }
+}
+
+@layer utilities {
+  .container-app {
+    @apply mx-auto w-full max-w-7xl px-6 md:px-10;
+  }
+  .text-balance {
+    text-wrap: balance;
+  }
+}
