@@ -33,12 +33,11 @@ const processSteps = [
   },
 ]
 
-// Editable placeholders — update as real figures become available.
 const impactStats = [
-  { value: "00+", label: "Artisans Supported" },
-  { value: "00+", label: "Products Created" },
-  { value: "00+", label: "kg Water Hyacinth Reused" },
-  { value: "00+", label: "Customers Reached" },
+  { value: "500+", label: "Products Created" },
+  { value: "30+", label: "Artisans Supported" },
+  { value: "600+", label: "kg Water Hyacinth Used" },
+  { value: "180+", label: "Customers Reached" },
 ]
 
 const galleryImages = [
