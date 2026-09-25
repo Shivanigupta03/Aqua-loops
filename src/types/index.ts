@@ -1,9 +1,13 @@
-export type ProductCategory = "Storage" | "Dining" | "Décor" | "Bags"
+export type ProductCategory = "Storage" | "Dining" | "Décor" | "Bags" | "Combos"
+
+export type ProductSize = "small" | "medium" | "big"
 
 export interface Product {
   id: string
   name: string
   price: number
+  /** Package size, used to calculate the per-piece courier charge at checkout. */
+  size: ProductSize
   category: ProductCategory
   description: string
   fullDescription: string
@@ -49,8 +53,11 @@ export interface Order {
   createdAt: string
   customer: CustomerDetails
   items: OrderItem[]
+  subtotal: number
+  gst: number
+  courier: number
   total: number
   status: OrderStatus
-  screenshotName?: string
-  screenshotDataUrl?: string
+  /** Customer-supplied link (e.g. Google Drive, shared with view access) to their payment screenshot. */
+  screenshotUrl?: string
 }

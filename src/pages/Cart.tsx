@@ -7,7 +7,7 @@ import { products } from "@/data/products"
 import { formatPrice } from "@/lib/utils"
 
 export default function CartPage() {
-  const { items, updateQuantity, removeFromCart, subtotal } = useCart()
+  const { items, updateQuantity, removeFromCart, subtotal, gst, courier, total } = useCart()
 
   const lines = items
     .map((item) => ({ item, product: products.find((p) => p.id === item.productId) }))
@@ -34,7 +34,14 @@ export default function CartPage() {
         <div className="flex flex-col gap-5 lg:col-span-2">
           {lines.map(({ item, product }) => (
             <Card key={item.productId} className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center">
-              <div className="h-24 w-24 shrink-0 rounded-2xl bg-gradient-to-br from-aqua-pale to-sand/50" />
+              <div className="h-24 w-24 shrink-0 overflow-hidden rounded-2xl bg-aqua-pale">
+                <img
+                  src={product!.images[0].src}
+                  alt={product!.name}
+                  className="h-full w-full object-cover"
+                  style={{ objectPosition: product!.images[0].focus }}
+                />
+              </div>
               <div className="flex flex-1 flex-col gap-1">
                 <p className="font-serif text-lg text-deep-teal">{product!.name}</p>
                 <p className="text-sm text-ink/50">{product!.category}</p>
@@ -76,12 +83,16 @@ export default function CartPage() {
             <span>{formatPrice(subtotal)}</span>
           </div>
           <div className="mt-2 flex items-center justify-between text-sm text-ink/60">
-            <span>Shipping</span>
-            <span>Calculated at checkout</span>
+            <span>GST (5%)</span>
+            <span>{formatPrice(gst)}</span>
+          </div>
+          <div className="mt-2 flex items-center justify-between text-sm text-ink/60">
+            <span>Courier</span>
+            <span>{formatPrice(courier)}</span>
           </div>
           <div className="mt-4 flex items-center justify-between border-t border-sea/10 pt-4">
             <span className="font-serif text-lg text-deep-teal">Total</span>
-            <span className="font-serif text-2xl text-deep-teal">{formatPrice(subtotal)}</span>
+            <span className="font-serif text-2xl text-deep-teal">{formatPrice(total)}</span>
           </div>
           <Button size="lg" className="mt-6 w-full" asChild>
             <Link to="/checkout">Proceed to Checkout</Link>

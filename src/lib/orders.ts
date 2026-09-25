@@ -1,69 +1,72 @@
+import { supabase } from "@/lib/supabaseClient"
 import type { CustomerDetails, Order, OrderItem } from "@/types"
-
-const ORDERS_KEY = "aqua-loops-orders"
-
-/**
- * Orders currently persist to localStorage so the checkout flow works
- * end-to-end without a backend. To move to Supabase later:
- *
- *   1. Create an `orders` table (customer fields, items as jsonb, total,
- *      status, screenshot_url, created_at).
- *   2. Create a `payment-screenshots` storage bucket.
- *   3. Replace `saveOrder` below with a call to
- *      `supabase.from("orders").insert({...})`.
- *   4. Replace the screenshot data-URL handling in Checkout.tsx with
- *      `supabase.storage.from("payment-screenshots").upload(...)` and
- *      store the returned public URL on the order instead of the base64
- *      data URL used here.
- *   5. Replace `getOrders` with a `supabase.from("orders").select("*")`
- *      query (scoped to the current user or an admin view).
- */
-
-function readOrders(): Order[] {
-  try {
-    const raw = localStorage.getItem(ORDERS_KEY)
-    return raw ? (JSON.parse(raw) as Order[]) : []
-  } catch {
-    return []
-  }
-}
-
-function writeOrders(orders: Order[]) {
-  localStorage.setItem(ORDERS_KEY, JSON.stringify(orders))
-}
 
 export function createOrderId() {
   return `AL-${Math.random().toString(36).slice(2, 8).toUpperCase()}`
 }
 
-export function saveOrder(params: {
+export async function saveOrder(params: {
+  id: string
   customer: CustomerDetails
   items: OrderItem[]
+  subtotal: number
+  gst: number
+  courier: number
   total: number
-  screenshotName?: string
-  screenshotDataUrl?: string
+  screenshotUrl?: string
   createdAt: string
-}): Order {
-  // Supabase target: supabase.from("orders").insert({ ...order, status: "Pending Verification" })
+}): Promise<Order> {
   const order: Order = {
-    id: createOrderId(),
+    id: params.id,
     createdAt: params.createdAt,
     customer: params.customer,
     items: params.items,
+    subtotal: params.subtotal,
+    gst: params.gst,
+    courier: params.courier,
     total: params.total,
     status: "Pending Verification",
-    screenshotName: params.screenshotName,
-    screenshotDataUrl: params.screenshotDataUrl,
+    screenshotUrl: params.screenshotUrl,
   }
 
-  const orders = readOrders()
-  orders.unshift(order)
-  writeOrders(orders)
+  const { error } = await supabase.from("orders").insert({
+    id: order.id,
+    created_at: order.createdAt,
+    customer: order.customer,
+    items: order.items,
+    subtotal: order.subtotal,
+    gst: order.gst,
+    courier: order.courier,
+    total: order.total,
+    status: order.status,
+    screenshot_url: order.screenshotUrl,
+  })
+  if (error) throw error
 
   return order
 }
 
-export function getOrders(): Order[] {
-  // Supabase target: supabase.from("orders").select("*").order("created_at", { ascending: false })
-  return readOrders()
+/**
+ * Requires an authenticated role with a SELECT policy on `orders` (the
+ * storefront's anon key can only insert) — for a future admin view.
+ */
+export async function getOrders(): Promise<Order[]> {
+  const { data, error } = await supabase
+    .from("orders")
+    .select("*")
+    .order("created_at", { ascending: false })
+  if (error) throw error
+
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    createdAt: row.created_at,
+    customer: row.customer,
+    items: row.items,
+    subtotal: row.subtotal,
+    gst: row.gst,
+    courier: row.courier,
+    total: row.total,
+    status: row.status,
+    screenshotUrl: row.screenshot_url ?? undefined,
+  }))
 }

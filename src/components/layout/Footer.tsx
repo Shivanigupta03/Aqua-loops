@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom"
-import { Camera, Mail } from "lucide-react"
+import { Mail } from "lucide-react"
 
 export function Footer() {
   return (
@@ -30,12 +30,8 @@ export function Footer() {
           </p>
           <div className="mt-4 flex flex-col gap-2.5 text-sm">
             <span className="flex items-center gap-2">
-              <Camera className="size-4" strokeWidth={1.75} />
-              @aqualoops
-            </span>
-            <span className="flex items-center gap-2">
               <Mail className="size-4" strokeWidth={1.75} />
-              hello@aqualoops.com
+              manyarajgarhia@gmail.com
             </span>
           </div>
         </div>

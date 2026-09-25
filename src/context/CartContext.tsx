@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react"
 import { products } from "@/data/products"
+import { calculateCourier, calculateGST } from "@/lib/pricing"
 import type { CartItem } from "@/types"
 
 const CART_KEY = "aqua-loops-cart"
@@ -16,6 +17,9 @@ interface CartContextValue {
   items: CartItem[]
   itemCount: number
   subtotal: number
+  gst: number
+  courier: number
+  total: number
   addToCart: (productId: string, quantity?: number) => void
   removeFromCart: (productId: string) => void
   updateQuantity: (productId: string, quantity: number) => void
@@ -81,19 +85,32 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [items]
   )
 
-  const subtotal = useMemo(
+  const lines = useMemo(
     () =>
-      items.reduce((sum, item) => {
-        const product = products.find((p) => p.id === item.productId)
-        return sum + (product?.price ?? 0) * item.quantity
-      }, 0),
+      items
+        .map((item) => ({ product: products.find((p) => p.id === item.productId), quantity: item.quantity }))
+        .filter((l): l is { product: (typeof products)[number]; quantity: number } => Boolean(l.product)),
     [items]
   )
+
+  const subtotal = useMemo(
+    () => lines.reduce((sum, { product, quantity }) => sum + product.price * quantity, 0),
+    [lines]
+  )
+
+  const gst = useMemo(() => calculateGST(subtotal), [subtotal])
+
+  const courier = useMemo(() => calculateCourier(lines), [lines])
+
+  const total = subtotal + gst + courier
 
   const value: CartContextValue = {
     items,
     itemCount,
     subtotal,
+    gst,
+    courier,
+    total,
     addToCart,
     removeFromCart,
     updateQuantity,

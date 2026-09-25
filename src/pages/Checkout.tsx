@@ -1,6 +1,6 @@
 import { useMemo, useState, type ChangeEvent, type FormEvent } from "react"
 import { Link, Navigate } from "react-router-dom"
-import { CheckCircle2, QrCode, UploadCloud } from "lucide-react"
+import { CheckCircle2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -8,11 +8,21 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { useCart } from "@/context/CartContext"
 import { products } from "@/data/products"
-import { saveOrder } from "@/lib/orders"
+import { createOrderId, saveOrder } from "@/lib/orders"
 import { formatPrice } from "@/lib/utils"
 import type { CustomerDetails, Order, OrderItem } from "@/types"
 
-const UPI_ID = "your-upi-id@bank"
+const UPI_ID = "9618772622@pthdfc"
+const PAYEE_NAME = "NR Travelbuddyz LLP"
+
+const BANK_DETAILS = {
+  accountName: "NR TRAVELBUDDYZ LLP",
+  bank: "YES BANK",
+  accountNumber: "041363400010370",
+  ifsc: "YESB0000413",
+  branch: "RP Road Branch",
+  accountType: "Current Account",
+}
 
 const emptyForm: CustomerDetails = {
   fullName: "",
@@ -36,13 +46,14 @@ const requiredFields: (keyof CustomerDetails)[] = [
 ]
 
 export default function Checkout() {
-  const { items, subtotal, clearCart } = useCart()
+  const { items, subtotal, gst, courier, total, clearCart } = useCart()
   const [form, setForm] = useState<CustomerDetails>(emptyForm)
   const [errors, setErrors] = useState<Partial<Record<keyof CustomerDetails, string>>>({})
-  const [screenshotName, setScreenshotName] = useState<string>()
-  const [screenshotDataUrl, setScreenshotDataUrl] = useState<string>()
+  const [screenshotUrl, setScreenshotUrl] = useState("")
   const [screenshotError, setScreenshotError] = useState<string>()
   const [confirmedOrder, setConfirmedOrder] = useState<Order | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string>()
 
   const lines = useMemo(
     () =>
@@ -52,7 +63,7 @@ export default function Checkout() {
     [items]
   )
 
-  const upiLink = `upi://pay?pa=${UPI_ID}&pn=Aqua%20Loops&am=${subtotal}&cu=INR&tn=Aqua%20Loops%20Order`
+  const upiLink = `upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent(PAYEE_NAME)}&am=${total}&cu=INR&tn=Aqua%20Loops%20Order`
 
   if (items.length === 0 && !confirmedOrder) {
     return <Navigate to="/shop" replace />
@@ -63,24 +74,9 @@ export default function Checkout() {
     setForm((prev) => ({ ...prev, [name]: value }))
   }
 
-  function handleFileChange(e: ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    if (!file.type.startsWith("image/")) {
-      setScreenshotError("Please upload an image file (PNG, JPG, etc).")
-      return
-    }
-
+  function handleScreenshotUrlChange(e: ChangeEvent<HTMLInputElement>) {
+    setScreenshotUrl(e.target.value)
     setScreenshotError(undefined)
-    setScreenshotName(file.name)
-
-    // Stored as a base64 data URL for the localStorage-backed order below.
-    // Supabase target: upload `file` to the "payment-screenshots" storage
-    // bucket and store the returned public URL on the order instead.
-    const reader = new FileReader()
-    reader.onload = () => setScreenshotDataUrl(reader.result as string)
-    reader.readAsDataURL(file)
   }
 
   function validate() {
@@ -98,33 +94,50 @@ export default function Checkout() {
       nextErrors.pincode = "Enter a valid pincode."
     }
     setErrors(nextErrors)
-    return Object.keys(nextErrors).length === 0
+
+    let screenshotValid = true
+    if (screenshotUrl.trim() && !/^https?:\/\/\S+$/.test(screenshotUrl.trim())) {
+      setScreenshotError("Enter a valid link (starting with http:// or https://).")
+      screenshotValid = false
+    }
+
+    return Object.keys(nextErrors).length === 0 && screenshotValid
   }
 
-  function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     if (!validate()) return
 
-    const orderItems: OrderItem[] = lines.map(({ item, product }) => ({
-      productId: item.productId,
-      name: product!.name,
-      price: product!.price,
-      quantity: item.quantity,
-    }))
+    setIsSubmitting(true)
+    setSubmitError(undefined)
 
-    // Currently persisted to localStorage — see src/lib/orders.ts for the
-    // Supabase migration path (orders table + screenshot storage bucket).
-    const order = saveOrder({
-      customer: form,
-      items: orderItems,
-      total: subtotal,
-      screenshotName,
-      screenshotDataUrl,
-      createdAt: new Date().toISOString(),
-    })
+    try {
+      const orderItems: OrderItem[] = lines.map(({ item, product }) => ({
+        productId: item.productId,
+        name: product!.name,
+        price: product!.price,
+        quantity: item.quantity,
+      }))
 
-    setConfirmedOrder(order)
-    clearCart()
+      const order = await saveOrder({
+        id: createOrderId(),
+        customer: form,
+        items: orderItems,
+        subtotal,
+        gst,
+        courier,
+        total,
+        screenshotUrl: screenshotUrl.trim() || undefined,
+        createdAt: new Date().toISOString(),
+      })
+
+      setConfirmedOrder(order)
+      clearCart()
+    } catch {
+      setSubmitError("Something went wrong submitting your order. Please try again.")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   if (confirmedOrder) {
@@ -188,45 +201,77 @@ export default function Checkout() {
             <h2 className="font-serif text-xl text-deep-teal">Pay using GPay / UPI</h2>
             <p className="mt-2 text-sm leading-relaxed text-ink/60">
               Please complete the payment using the UPI details below and
-              upload your payment screenshot for order confirmation.
+              share your payment screenshot for order confirmation.
             </p>
 
             <div className="mt-5 flex flex-col gap-6 sm:flex-row sm:items-center">
-              <div className="flex h-40 w-40 shrink-0 flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-sea/25 bg-aqua-pale text-center">
-                <QrCode className="size-8 text-sea/50" strokeWidth={1.5} />
-                <p className="px-3 text-xs font-medium text-sea/60">
-                  UPI QR code will be added here
-                </p>
+              <div className="h-72 w-72 shrink-0 overflow-hidden rounded-2xl border border-sea/15 bg-white">
+                <img
+                  src="/images/payment-qr-cropped.png"
+                  alt="UPI QR code for NR Travelbuddyz LLP"
+                  className="h-full w-full object-cover"
+                />
               </div>
               <div className="flex-1">
-                <p className="text-xs font-medium uppercase tracking-wide text-deep-teal/60">UPI ID</p>
+                <p className="text-xs font-medium uppercase tracking-wide text-deep-teal/60">Payee</p>
+                <p className="mt-1 font-serif text-lg text-deep-teal">{PAYEE_NAME}</p>
+                <p className="mt-3 text-xs font-medium uppercase tracking-wide text-deep-teal/60">UPI ID</p>
                 <p className="mt-1 font-serif text-lg text-deep-teal">{UPI_ID}</p>
                 <p className="mt-3 text-xs font-medium uppercase tracking-wide text-deep-teal/60">Amount</p>
-                <p className="mt-1 font-serif text-lg text-deep-teal">{formatPrice(subtotal)}</p>
+                <p className="mt-1 font-serif text-lg text-deep-teal">{formatPrice(total)}</p>
                 <Button asChild size="sm" className="mt-4">
                   <a href={upiLink}>Pay with GPay / UPI</a>
                 </Button>
               </div>
             </div>
 
+            <div className="mt-6 rounded-2xl border border-sea/15 bg-aqua-pale/40 p-5">
+              <p className="text-xs font-medium uppercase tracking-wide text-deep-teal/60">
+                Or pay via Bank Transfer
+              </p>
+              <dl className="mt-3 grid grid-cols-1 gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
+                <div className="flex justify-between gap-2 sm:block">
+                  <dt className="text-ink/50">Account Name</dt>
+                  <dd className="font-medium text-ink">{BANK_DETAILS.accountName}</dd>
+                </div>
+                <div className="flex justify-between gap-2 sm:block">
+                  <dt className="text-ink/50">Bank</dt>
+                  <dd className="font-medium text-ink">{BANK_DETAILS.bank}</dd>
+                </div>
+                <div className="flex justify-between gap-2 sm:block">
+                  <dt className="text-ink/50">Account Number</dt>
+                  <dd className="font-medium text-ink">{BANK_DETAILS.accountNumber}</dd>
+                </div>
+                <div className="flex justify-between gap-2 sm:block">
+                  <dt className="text-ink/50">IFSC</dt>
+                  <dd className="font-medium text-ink">{BANK_DETAILS.ifsc}</dd>
+                </div>
+                <div className="flex justify-between gap-2 sm:block">
+                  <dt className="text-ink/50">Branch</dt>
+                  <dd className="font-medium text-ink">{BANK_DETAILS.branch}</dd>
+                </div>
+                <div className="flex justify-between gap-2 sm:block">
+                  <dt className="text-ink/50">Account Type</dt>
+                  <dd className="font-medium text-ink">{BANK_DETAILS.accountType}</dd>
+                </div>
+              </dl>
+            </div>
+
             <div className="mt-6">
-              <Label htmlFor="screenshot">Upload Payment Screenshot</Label>
-              <label
-                htmlFor="screenshot"
-                className="mt-1.5 flex cursor-pointer flex-col items-center gap-2 rounded-2xl border border-dashed border-sea/25 bg-aqua-pale/40 px-6 py-8 text-center transition-colors hover:bg-aqua-pale/70"
-              >
-                <UploadCloud className="size-6 text-sea/60" strokeWidth={1.5} />
-                <span className="text-sm text-ink/60">
-                  {screenshotName ? screenshotName : "Click to upload a screenshot (PNG, JPG)"}
-                </span>
-                <input
-                  id="screenshot"
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleFileChange}
-                />
-              </label>
+              <Label htmlFor="screenshot">Payment Screenshot Link</Label>
+              <p className="mt-1 text-xs leading-relaxed text-ink/50">
+                Upload your screenshot to Google Drive, set sharing to
+                "Anyone with the link" → Viewer, then paste the link here.
+              </p>
+              <Input
+                id="screenshot"
+                type="url"
+                inputMode="url"
+                placeholder="https://drive.google.com/file/d/..."
+                value={screenshotUrl}
+                onChange={handleScreenshotUrlChange}
+                className="mt-2"
+              />
               {screenshotError && (
                 <p className="mt-1.5 text-xs text-red-500">{screenshotError}</p>
               )}
@@ -249,12 +294,29 @@ export default function Checkout() {
               </li>
             ))}
           </ul>
-          <div className="mt-5 flex items-center justify-between border-t border-sea/10 pt-4">
-            <span className="font-serif text-lg text-deep-teal">Total</span>
-            <span className="font-serif text-2xl text-deep-teal">{formatPrice(subtotal)}</span>
+          <div className="mt-5 flex flex-col gap-2 border-t border-sea/10 pt-4 text-sm text-ink/60">
+            <div className="flex items-center justify-between">
+              <span>Subtotal</span>
+              <span>{formatPrice(subtotal)}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>GST (5%)</span>
+              <span>{formatPrice(gst)}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Courier</span>
+              <span>{formatPrice(courier)}</span>
+            </div>
           </div>
-          <Button type="submit" size="lg" className="mt-6 w-full">
-            Submit Order Request
+          <div className="mt-4 flex items-center justify-between border-t border-sea/10 pt-4">
+            <span className="font-serif text-lg text-deep-teal">Total</span>
+            <span className="font-serif text-2xl text-deep-teal">{formatPrice(total)}</span>
+          </div>
+          {submitError && (
+            <p className="mt-4 text-center text-sm text-red-500">{submitError}</p>
+          )}
+          <Button type="submit" size="lg" className="mt-6 w-full" disabled={isSubmitting}>
+            {isSubmitting ? "Submitting…" : "Submit Order Request"}
           </Button>
           <p className="mt-3 text-center text-xs text-ink/40">
             This is a manual payment flow. Your order will be marked

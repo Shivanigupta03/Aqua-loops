@@ -37,7 +37,14 @@ export function CartDrawer() {
             <ul className="flex flex-col gap-5">
               {lines.map(({ item, product }) => (
                 <li key={item.productId} className="flex gap-4">
-                  <div className="h-20 w-20 shrink-0 rounded-2xl bg-gradient-to-br from-aqua-pale to-sand/50" />
+                  <div className="h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-aqua-pale">
+                    <img
+                      src={product!.images[0].src}
+                      alt={product!.name}
+                      className="h-full w-full object-cover"
+                      style={{ objectPosition: product!.images[0].focus }}
+                    />
+                  </div>
                   <div className="flex flex-1 flex-col justify-between">
                     <div className="flex items-start justify-between gap-2">
                       <p className="font-serif text-base text-deep-teal">

@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react"
-import { Camera, CheckCircle2, Mail } from "lucide-react"
+import { CheckCircle2, GraduationCap, Mail } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -84,20 +84,20 @@ export default function Contact() {
         <div className="flex flex-col justify-center gap-6">
           <div className="flex items-start gap-4">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-sea/10 text-sea">
-              <Camera className="size-5" strokeWidth={1.5} />
-            </div>
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-deep-teal/60">Instagram</p>
-              <p className="mt-1 text-ink/75">@aqualoops (Instagram placeholder)</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-sea/10 text-sea">
               <Mail className="size-5" strokeWidth={1.5} />
             </div>
             <div>
               <p className="text-xs font-medium uppercase tracking-wide text-deep-teal/60">Email</p>
-              <p className="mt-1 text-ink/75">hello@aqualoops.example (Email placeholder)</p>
+              <p className="mt-1 text-ink/75">manyarajgarhia@gmail.com</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-sea/10 text-sea">
+              <GraduationCap className="size-5" strokeWidth={1.5} />
+            </div>
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-deep-teal/60">Founder</p>
+              <p className="mt-1 text-ink/75">Manya Rajgarhia</p>
             </div>
           </div>
         </div>
