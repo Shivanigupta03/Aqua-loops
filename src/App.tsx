@@ -8,6 +8,7 @@ import ProductDetail from "@/pages/ProductDetail"
 import CartPage from "@/pages/Cart"
 import Checkout from "@/pages/Checkout"
 import Contact from "@/pages/Contact"
+import Testimonials from "@/pages/Testimonials"
 import NotFound from "@/pages/NotFound"
 
 export default function App() {
@@ -22,6 +23,7 @@ export default function App() {
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/testimonials" element={<Testimonials />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Layout>

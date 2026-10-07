@@ -61,3 +61,13 @@ export interface Order {
   /** Customer-supplied link (e.g. Google Drive, shared with view access) to their payment screenshot. */
   screenshotUrl?: string
 }
+
+export type TestimonialStatus = "Pending Approval" | "Approved" | "Rejected"
+
+export interface Testimonial {
+  id: string
+  createdAt: string
+  name: string
+  quote: string
+  status: TestimonialStatus
+}
